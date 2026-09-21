@@ -17,10 +17,24 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('User Connected:', socket.id);
 
-  // Message Receive karke Sabhi Users ko Send (Broadcast) karein
+  // 1. Join Private Room
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    console.log(`Socket ${socket.id} joined room: ${roomId}`);
+  });
+
+  // 2. Private Message (Sends ONLY to people inside that roomId)
+  socket.on('privateMessage', (data) => {
+    console.log('Private Message:', data);
+    if (data && data.roomId) {
+      io.to(data.roomId).emit('message', data);
+    }
+  });
+
+  // 3. Global Broadcast Message (Fallback / Global Chat)
   socket.on('message', (data) => {
-    console.log('Message:', data);
-    io.emit('message', data); // Broadcast to everyone
+    console.log('Global Message:', data);
+    io.emit('message', data);
   });
 
   socket.on('disconnect', () => {
